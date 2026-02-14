@@ -380,14 +380,22 @@
             const categories = Object.keys(themeAvgScores);
             const values = Object.values(themeAvgScores);
 
-            if (categories.length === 0) {
+            // Calculate overall average for fill color
+            const overallAvgScore = Object.values(themeAvgScores).reduce((acc, score) => acc + score, 0) / categories.length;
+            const overallChartColor = getScoreColor(overallAvgScore);
+
+            // Create an array of colors for each theme point
+            const themeColors = Object.values(themeAvgScores).map(score => getScoreColor(score));
+
+            // To close the radar chart loop, repeat the first value and color at the end
+            if (categories.length > 0) {
+                categories.push(categories[0]);
+                values.push(values[0]);
+                themeColors.push(themeColors[0]); // Also close the color loop
+            } else {
                 radarChartDiv.innerHTML = '<p class="text-center text-warning">Aucune note enregistrée pour générer le graphique.</p>';
                 return;
             }
-
-            // Close the radar chart loop
-            categories.push(categories[0]);
-            values.push(values[0]);
 
             const data = [{
                 type: 'scatterpolar',
@@ -395,13 +403,19 @@
                 theta: categories,
                 fill: 'toself',
                 name: 'Score Moyen',
+                fillcolor: overallChartColor.replace('hsl', 'hsla').replace(')', ', 0.3)'), // Semi-transparent fill
                 line: {
-                    color: 'var(--primary-color)' 
+                    color: overallChartColor // Line color based on overall average
                 },
                 marker: {
-                    color: 'var(--primary-color)'
+                    size: 10,
+                    color: themeColors, // Colors for each point based on theme score
+                    line: {
+                        color: 'white',
+                        width: 1
+                    }
                 },
-                opacity: 0.7,
+                opacity: 0.9, // Adjust trace opacity
                 hovertemplate: '<b>%{theta}</b><br>Score Moyen: %{r:.1f}<extra></extra>'
             }];
 
@@ -413,11 +427,20 @@
                         tickvals: [0, 2, 4, 6, 8, 10],
                         tickmode: 'array',
                         linecolor: '#e9ecef',
-                        gridcolor: '#e9ecef'
+                        gridcolor: '#e9ecef',
+                        tickfont: {
+                            color: 'var(--light-text-color)'
+                        }
                     },
                     angularaxis: {
                         linecolor: '#e9ecef',
-                        gridcolor: '#e9ecef'
+                        gridcolor: '#e9ecef',
+                        tickfont: {
+                            color: 'var(--text-color)',
+                            size: 12
+                        },
+                        rotation: 90, // Start points from top
+                        direction: "clockwise" // Themes arranged clockwise
                     }
                 },
                 showlegend: false,
@@ -426,14 +449,18 @@
                     font: {
                         size: 20,
                         color: 'var(--text-color)'
-                    }
+                    },
+                    y: 0.95, // Adjust title position
+                    x: 0.5,
+                    xanchor: 'center',
+                    yanchor: 'top'
                 },
                 font: {
                     family: 'Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif',
                     size: 14,
                     color: 'var(--text-color)'
                 },
-                margin: {t: 80, b: 80, l: 80, r: 80},
+                margin: {t: 100, b: 80, l: 80, r: 80}, // Adjust margin for title
                 plot_bgcolor: 'var(--card-bg-color)',
                 paper_bgcolor: 'var(--card-bg-color)'
             };
