@@ -1,0 +1,76 @@
+{
+  "themes": {
+    "Logement": [
+      "Qualité des logements disponibles",
+	  "Insonorisation",
+	  "Taille des logements",
+	  "Accès à une terrasse ou un jardin",
+      "Prix moyen des loyers",
+      "Accessibilité des transports en commun",
+	  "Confort/chauffage",
+      "Propreté des quartiers",
+	  "Architecture"
+    ],
+    "Coûts de la vie": [
+      "Prix de l'alimentation",
+      "Coût des services (électricité, internet)",
+      "Coût des loisirs",
+      "Coût de l'habillement",
+	  "Prix des restaurants",
+      "Coût des transports",
+	  "Coût des sports"
+    ],
+    "Infrastructures": [
+      "Qualité du réseau routier",
+	  "Parcs et espaces verts disponi",
+      "Fréquence des transports en commun",
+      "Pistes cyclables",
+      "Facilité de stationnement",
+	  "Piscines/patinoires",
+      "Temps de trajet moyen"
+    ],
+    "Sécurité": [
+      "Taux de criminalité général",
+      "Sentiment de sécurité général",
+	  "Sentiment de sécurité nocturne",
+      "Présence policière",
+      "Sécurité routière"
+    ],
+    "Santé": [
+      "Accès à un medecin",
+      "Qualité des hôpitaux",
+      "Disponibilité de spécialistes",
+      "Proximité des pharmacies",
+	  "Accès à des ressources en santé mentale"
+    ],
+    "Environnement": [
+      "Qualité de l'air",
+      "Gestion des déchets",
+      "Forestation urbaine",
+      "Pollution sonore",
+	  "Pollution visuelle"
+    ],
+    "Activités et culture": [
+      "Nombre de musées et galeries",
+      "Offre de spectacles et concerts",
+	  "Festivals",
+      "Vie nocturne",
+      "Événements sportifs",
+      "Variété des restaurants"
+    ],
+    "Économie": [
+      "Taux de chômage",
+      "Diversité des opportunités d'emploi",
+      "Dynamisme entrepreneurial",
+      "Salaire compétitifs",
+      "Facilité d'entreprendre"
+    ],
+    "Éducation": [
+      "Qualité des écoles primaires",
+      "Qualité des écoles secondaires",
+      "Présence d'universités",
+      "Offre de formations professionnelles",
+      "Activités parascolaires"
+    ]
+  }
+}

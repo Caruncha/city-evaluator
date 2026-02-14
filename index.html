@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Évaluateur de Ville 🏙️</title>
+    <!-- Bootstrap CSS from CDN for a nice UI/UX -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Plotly.js from CDN for the radar chart -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
+    <style>
+        :root {
+            --primary-color: #007bff; /* Bootstrap blue */
+            --secondary-color: #6c757d; /* Bootstrap gray */
+            --background-color: #f0f2f5;
+            --card-bg-color: #ffffff;
+            --text-color: #343a40;
+            --light-text-color: #6c757d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-top: 30px;
+            padding-bottom: 30px;
+        }
+        .container {
+            max-width: 960px;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            background-color: var(--card-bg-color);
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .lead {
+            font-size: 1.15rem;
+            color: var(--light-text-color);
+        }
+        .list-group-item {
+            border-color: #e9ecef;
+            background-color: #f8f9fa;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+            border-color: #545b62;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+            border-color: #218838;
+            transform: translateY(-2px);
+        }
+        .btn-info {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+        }
+        .btn-info:hover {
+            background-color: #138496;
+            border-color: #138496;
+            transform: translateY(-2px);
+        }
+        .form-range::-webkit-slider-thumb {
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-range::-webkit-slider-thumb:hover {
+            box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+        }
+        .slider-group {
+            display: grid;
+            grid-template-columns: minmax(150px, 1fr) auto minmax(100px, 1fr) 50px; /* Label | spacer | slider | value */
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px 15px; /* Adjust padding for better look */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            transition: all 0.2s ease-in-out;
+        }
+        .slider-group:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transform: translateY(-2px);
+        }
+        .slider-group label {
+            margin-bottom: 0;
+            font-size: 1rem; /* Slightly smaller for better fit */
+            font-weight: 500; /* Medium weight */
+            white-space: nowrap; /* Prevent label from wrapping too easily */
+            overflow: hidden; /* Hide overflow */
+            text-overflow: ellipsis; /* Add ellipsis for overflow */
+        }
+        .form-range {
+            width: 100%; /* Ensure slider takes available grid space */
+            margin: 0; /* Remove default Bootstrap margins if any */
+        }
+        .slider-value-display {
+            min-width: 40px; /* Slightly more space for 2-digit numbers */
+            text-align: right; /* Align value to the right */
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        .progress-bar-container {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+            background-color: #e9ecef;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background-color: var(--primary-color);
+            transition: width 0.4s ease-in-out;
+            border-radius: 5px;
+        }
+        #chart-container {
+            background-color: var(--card-bg-color);
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-top: 30px;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px; /* Space between buttons */
+            margin-top: 30px;
+        }
+        .nav-buttons .btn {
+            flex-grow: 1; /* Make buttons expand to fill space */
+        }
+        .nav-buttons .btn:only-child {
+            flex-grow: 0; /* Don't expand if only one button */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card p-4">
+            <h1 class="text-center mb-4">Évaluateur de Ville <span class="text-primary">🏙️</span></h1>
+            
+            <div id="welcome-screen">
+                <p class="lead text-center mb-4">Explorez et notez différents aspects de votre ville idéale à travers des catégories clés. À la fin, visualisez un profil détaillé grâce à un graphique radar.</p>
+                <h2 class="text-center mb-3">Thèmes à évaluer :</h2>
+                <div class="list-group list-group-flush mb-4">
+                    <ul id="theme-list" class="list-group list-group-flush"></ul>
+                </div>
+                <div class="text-center mt-4">
+                    <button id="start-evaluation" class="btn btn-primary btn-lg px-5 py-3 shadow-sm">Commencer l'évaluation <span class="ms-2">🚀</span></button>
+                </div>
+            </div>
+
+            <div id="evaluation-screen" style="display:none;">
+                <div class="progress-bar-container">
+                    <p class="text-center mb-2" id="progress-text">Progression : Thème 0/0</p>
+                    <div class="progress">
+                        <div id="progress-bar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                <h2 id="current-theme-title" class="mb-4 text-center"></h2>
+                <p class="text-center text-muted mb-4">Utilisez les sliders ci-dessous pour noter chaque critère de 1 (très faible) à 10 (très fort).</p>
+                <div id="criteria-inputs">
+                    <!-- Sliders will be injected here -->
+                </div>
+                <div class="nav-buttons">
+                    <button id="prev-theme" class="btn btn-secondary py-2" style="display:none;">&larr; Thème Précédent</button>
+                    <button id="next-theme" class="btn btn-primary py-2">Thème Suivant &rarr;</button>
+                    <button id="finish-evaluation" class="btn btn-success py-2 shadow-sm" style="display:none;">Terminer l'évaluation et voir le profil ✨</button>
+                </div>
+            </div>
+
+            <div id="results-screen" style="display:none;">
+                <h2 class="text-center mb-4">Votre Profil de Ville est Prêt ! <span class="text-success">📊</span></h2>
+                <p class="lead text-center mb-4">Félicitations ! Vous avez évalué tous les critères. Voici le profil radar de votre ville idéale basé sur vos notes.</p>
+                <div id="chart-container">
+                    <div id="radar-chart">
+                        <!-- Plotly chart will be injected here -->
+                    </div>
+                </div>
+                <div class="text-center mt-5">
+                    <button id="restart-evaluation" class="btn btn-info btn-lg px-5 py-3 shadow-sm">Recommencer l'évaluation <span class="ms-2">🔄</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        let criteriaData = {}; // Will be loaded from criteria.json
+        let themeNames = [];
+        let currentThemeIndex = 0;
+        let allScores = {}; // Stores all criteria scores
+
+        // --- DOM Elements ---
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const evaluationScreen = document.getElementById('evaluation-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const startButton = document.getElementById('start-evaluation');
+        const themeList = document.getElementById('theme-list');
+        const currentThemeTitle = document.getElementById('current-theme-title');
+        const criteriaInputs = document.getElementById('criteria-inputs');
+        const prevButton = document.getElementById('prev-theme');
+        const nextButton = document.getElementById('next-theme');
+        const finishButton = document.getElementById('finish-evaluation');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const restartButton = document.getElementById('restart-evaluation');
+        const radarChartDiv = document.getElementById('radar-chart');
+
+        // --- Functions ---
+        function getScoreColor(score) {
+            // Map score from 1-10 to a hue value (e.g., 0 for red, 120 for green)
+            // Score 1 -> Hue 0 (Red)
+            // Score 10 -> Hue 120 (Green)
+            const hue = (score - 1) * (120 / 9); // Scale 1-10 to 0-120
+            return `hsl(${hue}, 70%, 40%)`; // Keep saturation and lightness fixed for consistency
+        }
+
+        async function loadCriteriaAndInitialize() {
+            try {
+                const response = await fetch('criteria.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                criteriaData = await response.json();
+                themeNames = Object.keys(criteriaData.themes);
+                initializeApp();
+            } catch (error) {
+                console.error("Could not load criteria.json:", error);
+                alert("Erreur: Impossible de charger les critères d'évaluation. Veuillez vérifier que le fichier 'criteria.json' est présent et accessible.");
+            }
+        }
+
+        function initializeApp() {
+            welcomeScreen.style.display = 'block';
+            evaluationScreen.style.display = 'none';
+            resultsScreen.style.display = 'none';
+            currentThemeIndex = 0;
+            allScores = {}; // Reset scores
+
+            // Populate theme list on welcome screen
+            themeList.innerHTML = '';
+            themeNames.forEach(theme => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = theme;
+                themeList.appendChild(li);
+            });
+        }
+
+        function startEvaluation() {
+            welcomeScreen.style.display = 'none';
+            evaluationScreen.style.display = 'block';
+            resultsScreen.style.display = 'none';
+            displayCurrentTheme();
+        }
+
+        function displayCurrentTheme() {
+            const themeName = themeNames[currentThemeIndex];
+            const criteria = criteriaData.themes[themeName];
+
+            currentThemeTitle.textContent = `Thème : ${themeName}`;
+            criteriaInputs.innerHTML = ''; // Clear previous inputs
+
+            criteria.forEach(criterion => {
+                const key = `${themeName}_${criterion}`;
+                const savedScore = allScores[key] !== undefined ? allScores[key] : 5; // Default to 5
+
+                const div = document.createElement('div');
+                div.className = 'slider-group'; // Use new class for styling
+                div.innerHTML = `
+                    <label for="${key}">${criterion}</label>
+                    <div></div> <!-- Spacer for grid alignment -->
+                    <input type="range" class="form-range" id="${key}" min="1" max="10" value="${savedScore}">
+                    <span id="${key}-value" class="slider-value-display">${savedScore}</span>
+                `;
+                criteriaInputs.appendChild(div);
+
+                const slider = document.getElementById(key);
+                const valueSpan = document.getElementById(`${key}-value`);
+
+                // Set initial color
+                valueSpan.style.color = getScoreColor(savedScore);
+
+                slider.oninput = (event) => {
+                    const score = parseInt(event.target.value);
+                    valueSpan.textContent = score;
+                    valueSpan.style.color = getScoreColor(score);
+                    allScores[key] = score;
+                };
+                // Ensure initial value is stored
+                allScores[key] = savedScore;
+            });
+
+            // Update navigation buttons
+            prevButton.style.display = currentThemeIndex > 0 ? 'block' : 'none';
+            nextButton.style.display = currentThemeIndex < themeNames.length - 1 ? 'block' : 'none';
+            finishButton.style.display = currentThemeIndex === themeNames.length - 1 ? 'block' : 'none';
+
+            // Adjust next/finish button visibility if only one theme
+            if (themeNames.length === 1) {
+                nextButton.style.display = 'none';
+                finishButton.style.display = 'block';
+            }
+
+
+            // Update progress bar
+            const progress = ((currentThemeIndex + 1) / themeNames.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `Progression : Thème ${currentThemeIndex + 1}/${themeNames.length}`;
+        }
+
+        function calculateAndDisplayResults() {
+            evaluationScreen.style.display = 'none';
+            welcomeScreen.style.display = 'none';
+            resultsScreen.style.display = 'block';
+
+            const themeAvgScores = {};
+            themeNames.forEach(themeName => {
+                const criteria = criteriaData.themes[themeName];
+                let totalScoreForTheme = 0;
+                let countForTheme = 0;
+                criteria.forEach(criterion => {
+                    const key = `${themeName}_${criterion}`;
+                    if (allScores[key] !== undefined) {
+                        totalScoreForTheme += allScores[key];
+                        countForTheme++;
+                    }
+                });
+                if (countForTheme > 0) {
+                    themeAvgScores[themeName] = totalScoreForTheme / countForTheme;
+                } else {
+                    themeAvgScores[themeName] = 5; // Default if no criteria rated in theme
+                }
+            });
+
+            const categories = Object.keys(themeAvgScores);
+            const values = Object.values(themeAvgScores);
+
+            if (categories.length === 0) {
+                radarChartDiv.innerHTML = '<p class="text-center text-warning">Aucune note enregistrée pour générer le graphique.</p>';
+                return;
+            }
+
+            // Close the radar chart loop
+            categories.push(categories[0]);
+            values.push(values[0]);
+
+            const data = [{
+                type: 'scatterpolar',
+                r: values,
+                theta: categories,
+                fill: 'toself',
+                name: 'Score Moyen',
+                line: {
+                    color: 'var(--primary-color)' 
+                },
+                marker: {
+                    color: 'var(--primary-color)'
+                },
+                opacity: 0.7,
+                hovertemplate: '<b>%{theta}</b><br>Score Moyen: %{r:.1f}<extra></extra>'
+            }];
+
+            const layout = {
+                polar: {
+                    radialaxis: {
+                        visible: true,
+                        range: [0, 10],
+                        tickvals: [0, 2, 4, 6, 8, 10],
+                        tickmode: 'array',
+                        linecolor: '#e9ecef',
+                        gridcolor: '#e9ecef'
+                    },
+                    angularaxis: {
+                        linecolor: '#e9ecef',
+                        gridcolor: '#e9ecef'
+                    }
+                },
+                showlegend: false,
+                title: {
+                    text: 'Graphique Radar des Scores Moyens par Thème',
+                    font: {
+                        size: 20,
+                        color: 'var(--text-color)'
+                    }
+                },
+                font: {
+                    family: 'Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif',
+                    size: 14,
+                    color: 'var(--text-color)'
+                },
+                margin: {t: 80, b: 80, l: 80, r: 80},
+                plot_bgcolor: 'var(--card-bg-color)',
+                paper_bgcolor: 'var(--card-bg-color)'
+            };
+
+            Plotly.newPlot(radarChartDiv, data, layout, {responsive: true});
+        }
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', startEvaluation);
+
+        prevButton.addEventListener('click', () => {
+            if (currentThemeIndex > 0) {
+                currentThemeIndex--;
+                displayCurrentTheme();
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (currentThemeIndex < themeNames.length - 1) {
+                currentThemeIndex++;
+                displayCurrentTheme();
+            }
+        });
+
+        finishButton.addEventListener('click', calculateAndDisplayResults);
+
+        restartButton.addEventListener('click', initializeApp);
+
+        // Initial app load - Call the async function to load data
+        loadCriteriaAndInitialize();
+
+    </script>
+</body>
+</html>
